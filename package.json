@@ -6,7 +6,9 @@
   "scripts": {
     "eslint": "eslint src/**",
     "pretest": "npm run eslint",
-    "test": "mocha -R list ./tests"
+    "test": "mocha -R list ./tests",
+    "release:patch": "npm version patch && git push --all && git push --tags",
+    "release:minor": "npm version minor && git push --all && git push --tags"
   },
   "repository": "bitbucket:cqrs/node-cqrs-mongo",
   "keywords": [
