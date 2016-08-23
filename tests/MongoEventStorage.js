@@ -100,6 +100,14 @@ describe('MongoEventStorage', function () {
 				}
 			});
 		});
+
+		it('allows to exclude events saved in a snapshot', () => {
+
+			return storage.getAggregateEvents(aggregateId, { after: 1 }).then(events => {
+				events.should.be.an('Array').that.has.length(1);
+				events.should.have.deep.property('[0].aggregateVersion', 2);
+			});
+		});
 	});
 
 	describe('getSagaEvents(sagaId, options)', () => {

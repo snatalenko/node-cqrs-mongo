@@ -87,11 +87,21 @@ module.exports = class MongoEventStorage {
 		return new ObjectID().toString();
 	}
 
-	getAggregateEvents(aggregateId) {
+	getAggregateEvents(aggregateId, options) {
 		if (!aggregateId) throw new TypeError('aggregateId argument required');
 		if (typeof aggregateId === 'string') aggregateId = new ObjectID(aggregateId);
 
-		return this._findEvents({ aggregateId }, { sort: 'aggregateVersion' });
+		const q = { aggregateId };
+
+		if (options && options.after) {
+			(q.aggregateVersion || (q.aggregateVersion = {}))['$gt'] = options.after;
+		}
+
+		if (options && options.before) {
+			(q.aggregateVersion || (q.aggregateVersion = {}))['$lt'] = options.before;
+		}
+
+		return this._findEvents(q, { sort: 'aggregateVersion' });
 	}
 
 	getSagaEvents(sagaId, options) {
@@ -112,7 +122,7 @@ module.exports = class MongoEventStorage {
 			q._id = { '$ne': ObjectID(options.except) };
 		}
 
-		return this._findEvents(q);
+		return this._findEvents(q, { sort: 'sagaVersion' });
 	}
 
 	getEvents(eventTypes) {
