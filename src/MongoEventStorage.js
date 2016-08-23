@@ -1,12 +1,15 @@
 'use strict';
 
-const debug = require('debug')('cqrs:MongoEventStorage');
 const MongoClient = require('mongodb').MongoClient;
 const ObjectID = require('mongodb').ObjectID;
 const Binary = require('mongodb').Binary;
-const reconnect = require('./utils/reconnect');
-const _db = Symbol('db');
+const ConcurrencyError = require('./ConcurrencyError');
+const reconnect = require('./reconnect');
+const debug = require('debug')('cqrs:MongoEventStorage');
 
+const co = require('co');
+
+const _collection = Symbol('collection');
 
 function wrapObjectId(obj, key) {
 	if (!obj) throw new TypeError('obj argument required');
@@ -39,63 +42,45 @@ function wrapEvent(evt) {
 }
 
 
+function* connect({connectionString, collectionName}) {
+	if (typeof connectionString !== 'string' || !connectionString.length) throw new TypeError('connectionString argument must be a non-empty String');
+	if (typeof collectionName !== 'string' || !collectionName.length) throw new TypeError('collectionName argument must be a non-empty String');
+
+	debug(`connecting to ${connectionString.replace(/\/\/([^@\/]+@)?/, '//***@')}...`);
+
+	const connection = yield MongoClient.connect(connectionString);
+
+	debug('connected');
+
+	const collection = connection.collection(collectionName);
+	const indexNames = yield [
+		collection.ensureIndex({ aggregateId: 1, aggregateVersion: 1 }, { unique: true, sparse: true }),
+		collection.ensureIndex({ sagaId: 1, sagaVersion: 1 }, { unique: true, sparse: true })
+	];
+
+	debug(`indexes ${indexNames.join(', ')} ensured`);
+
+	return collection;
+}
+
+
 module.exports = class MongoEventStorage {
 
-	/** Promise that resolves to connected mongo DB object */
-	get db() {
-		return this[_db] || Promise.reject(new Error('MongoGateway.connect(..) must be invoked first'));
-	}
-
 	get collection() {
-		return this.db.then(db => db.collection(this._collectionName));
+		return this[_collection];
 	}
 
 	constructor(options) {
 		if (!options) throw new TypeError('options argument required');
 		if (!options.connectionString) throw new TypeError('options.connectionString argument required');
 
-		this._collectionName = options.eventsCollection || 'events';
+		const connectionString = options.connectionString;
+		const collectionName = options.eventsCollection || 'events';
+		const connectMethod = co.wrap(connect);
 
-		this.connect(options.connectionString);
-	}
-
-	connect(connectionString) {
-		if (typeof connectionString !== 'string' || !connectionString.length) throw new TypeError('connectionString argument must be a non-empty String');
-
-		debug(`connecting to ${reconnect.mask(connectionString)}...`);
-
-		this[_db] = reconnect(() => MongoClient.connect(connectionString), null, null, debug);
-
-		this.db.then(() => {
-			debug('connected');
-		}, err => {
-			debug('connection failure');
-			debug(err);
-			throw err;
+		Object.defineProperty(this, _collection, {
+			value: reconnect(() => connectMethod({ connectionString, collectionName }), { debug })
 		});
-
-		this.collection.then(collection => Promise.all([
-			collection.ensureIndex({ aggregateId: 1, aggregateVersion: 1 }, { unique: true, sparse: true }),
-			// collection.ensureIndex({ sagaId: 1, sagaVersion: 1 }, { unique: true, sparse: true })
-		])).then(indexNames => {
-			debug(`indexes ${indexNames.join(', ')} ensured`);
-		}, err => {
-			debug('index creation has failed');
-			debug(err);
-		});
-
-		return this.db;
-	}
-
-	disconnect() {
-		this.db
-			.then(db => db.close())
-			.then(this.onDisconnected.bind(this));
-	}
-
-	onDisconnected() {
-		this[_db] = undefined;
-		debug('disconnected');
 	}
 
 	getNewId() {
@@ -106,20 +91,25 @@ module.exports = class MongoEventStorage {
 		if (!aggregateId) throw new TypeError('aggregateId argument required');
 		if (typeof aggregateId === 'string') aggregateId = new ObjectID(aggregateId);
 
-		return this._findEvents({ aggregateId: aggregateId }, { sort: 'aggregateVersion' });
+		return this._findEvents({ aggregateId }, { sort: 'aggregateVersion' });
 	}
 
 	getSagaEvents(sagaId, options) {
 		if (!sagaId) throw new TypeError('sagaId argument required');
 		if (typeof sagaId === 'string') sagaId = new ObjectID(sagaId);
 
-		const q = { sagaId: sagaId };
+		const q = { sagaId };
+
+		if (options && options.after) {
+			(q.sagaVersion || (q.sagaVersion = {}))['$gt'] = options.after;
+		}
+
+		if (options && options.before) {
+			(q.sagaVersion || (q.sagaVersion = {}))['$lt'] = options.before;
+		}
 
 		if (options && options.except) {
-			q._id = {
-				$nin: Array.isArray(options.except) ?
-					Array.from(options.except, eventId => ObjectID(eventId)) : [ObjectID(options.except)]
-			};
+			q._id = { '$ne': ObjectID(options.except) };
 		}
 
 		return this._findEvents(q);
@@ -163,12 +153,10 @@ module.exports = class MongoEventStorage {
 				return events;
 			}, err => {
 				if (err.code === 11000) {
-					const concurrencyError = new Error('event is not unique');
-					concurrencyError.type = 'ConcurrencyError';
-					throw concurrencyError;
-				} else {
-					debug('commit operation has failed');
-					debug(err);
+					throw new ConcurrencyError('event is not unique');
+				}
+				else {
+					debug('commit operation has failed: %s', err && err.message || err);
 					throw err;
 				}
 			});

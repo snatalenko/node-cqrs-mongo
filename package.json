@@ -4,13 +4,11 @@
   "description": "MongoDB storage implementation for node-cqrs backbone",
   "main": "index.js",
   "scripts": {
-    "test": "mocha -R list ./tests/index.js",
-    "debug": "mocha -R spec --watch ./tests/index.js"
+    "eslint": "eslint src/**",
+    "pretest": "npm run eslint",
+    "test": "mocha -R list ./tests"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@bitbucket.org/cqrs/node-cqrs-mongo.git"
-  },
+  "repository": "bitbucket:cqrs/node-cqrs-mongo",
   "keywords": [
     "CQRS",
     "ES6",
@@ -21,7 +19,13 @@
   "license": "MIT",
   "homepage": "https://bitbucket.org/cqrs/node-cqrs-mongo.git",
   "dependencies": {
+    "co": "^4.6.0",
     "debug": "^2.2.0",
-    "mongodb": "^2.1.7"
+    "mongodb": "^2.2.8",
+    "node-cqrs": "bitbucket:cqrs/node-cqrs"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.0.2"
   }
 }
