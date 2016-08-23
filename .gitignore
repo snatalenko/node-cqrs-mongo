@@ -1,3 +1,7 @@
+# Project Assets
+# ==============
+credentials.json
+
 # Node and related ecosystem
 # ==========================
 .nodemonignore
@@ -20,6 +24,7 @@ local.properties
 .c9/
 .vs/
 .idea/
+.vscode/
 data/
 mongod
 *.sublime-workspace
