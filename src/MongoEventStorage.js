@@ -5,7 +5,8 @@ const ObjectID = require('mongodb').ObjectID;
 const Binary = require('mongodb').Binary;
 const ConcurrencyError = require('./ConcurrencyError');
 const reconnect = require('./reconnect');
-const debug = require('debug')('cqrs:MongoEventStorage');
+const debug = require('debug')('cqrs:debug:mongo');
+const info = require('debug')('cqrs:info:mongo');
 
 const co = require('co');
 
@@ -50,7 +51,7 @@ function* connect({connectionString, collectionName}) {
 
 	const connection = yield MongoClient.connect(connectionString);
 
-	debug('connected');
+	info(`connected to ${connectionString.replace(/\/\/([^@\/]+@)?/, '//***@')}`);
 
 	const collection = connection.collection(collectionName);
 	const indexNames = yield [
@@ -79,7 +80,7 @@ module.exports = class MongoEventStorage {
 		const connectMethod = co.wrap(connect);
 
 		Object.defineProperty(this, _collection, {
-			value: reconnect(() => connectMethod({ connectionString, collectionName }), { debug })
+			value: reconnect(() => connectMethod({ connectionString, collectionName }), { debug: info })
 		});
 	}
 
@@ -166,7 +167,7 @@ module.exports = class MongoEventStorage {
 					throw new ConcurrencyError('event is not unique');
 				}
 				else {
-					debug('commit operation has failed: %s', err && err.message || err);
+					info('commit operation has failed: %s', err && err.message || err);
 					throw err;
 				}
 			});
