@@ -4,7 +4,7 @@
   "description": "MongoDB storage implementation for node-cqrs backbone",
   "main": "index.js",
   "scripts": {
-    "eslint": "eslint src/**",
+    "eslint": "eslint src/",
     "pretest": "npm run eslint",
     "test": "mocha -R list ./tests",
     "release:patch": "npm version patch && git push --all && git push --tags",
