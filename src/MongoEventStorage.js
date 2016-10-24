@@ -56,7 +56,7 @@ function* connect({connectionString, collectionName}) {
 	const collection = connection.collection(collectionName);
 	const indexNames = yield [
 		collection.ensureIndex({ aggregateId: 1, aggregateVersion: 1 }, { unique: true, sparse: true }),
-		collection.ensureIndex({ sagaId: 1, sagaVersion: 1 }, { unique: true, sparse: true })
+		collection.ensureIndex({ sagaId: 1, sagaVersion: 1 }, { unique: false, sparse: true })
 	];
 
 	debug(`indexes ${indexNames.join(', ')} ensured`);
