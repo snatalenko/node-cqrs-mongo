@@ -43,15 +43,15 @@ function wrapEvent(evt) {
 }
 
 
-function* connect({connectionString, collectionName}) {
+function* connect({ connectionString, collectionName }) {
 	if (typeof connectionString !== 'string' || !connectionString.length) throw new TypeError('connectionString argument must be a non-empty String');
 	if (typeof collectionName !== 'string' || !collectionName.length) throw new TypeError('collectionName argument must be a non-empty String');
 
-	debug(`connecting to ${connectionString.replace(/\/\/([^@\/]+@)?/, '//***@')}...`);
+	debug(`connecting to ${connectionString.replace(/\/\/([^@/]+@)?/, '//***@')}...`);
 
 	const connection = yield MongoClient.connect(connectionString);
 
-	info(`connected to ${connectionString.replace(/\/\/([^@\/]+@)?/, '//***@')}`);
+	info(`connected to ${connectionString.replace(/\/\/([^@/]+@)?/, '//***@')}`);
 
 	const collection = connection.collection(collectionName);
 	const indexNames = yield [
@@ -84,7 +84,7 @@ module.exports = class MongoEventStorage {
 		});
 	}
 
-	getNewId() {
+	getNewId() { // eslint-disable-line class-methods-use-this
 		return new ObjectID().toString();
 	}
 
@@ -95,11 +95,11 @@ module.exports = class MongoEventStorage {
 		const q = { aggregateId };
 
 		if (options && options.after) {
-			(q.aggregateVersion || (q.aggregateVersion = {}))['$gt'] = options.after;
+			(q.aggregateVersion || (q.aggregateVersion = {})).$gt = options.after;
 		}
 
 		if (options && options.before) {
-			(q.aggregateVersion || (q.aggregateVersion = {}))['$lt'] = options.before;
+			(q.aggregateVersion || (q.aggregateVersion = {})).$lt = options.before;
 		}
 
 		return this._findEvents(q, { sort: 'aggregateVersion' });
@@ -112,15 +112,15 @@ module.exports = class MongoEventStorage {
 		const q = { sagaId };
 
 		if (options && options.after) {
-			(q.sagaVersion || (q.sagaVersion = {}))['$gt'] = options.after;
+			(q.sagaVersion || (q.sagaVersion = {})).$gt = options.after;
 		}
 
 		if (options && options.before) {
-			(q.sagaVersion || (q.sagaVersion = {}))['$lt'] = options.before;
+			(q.sagaVersion || (q.sagaVersion = {})).$lt = options.before;
 		}
 
 		if (options && options.except) {
-			q._id = { '$ne': ObjectID(options.except) };
+			q._id = { $ne: ObjectID(options.except) };
 		}
 
 		return this._findEvents(q, { sort: 'sagaVersion' });
@@ -129,7 +129,7 @@ module.exports = class MongoEventStorage {
 	getEvents(eventTypes) {
 		if (!Array.isArray(eventTypes)) throw new TypeError('eventTypes argument must be an Array');
 
-		return this._findEvents({ type: { '$in': eventTypes } });
+		return this._findEvents({ type: { $in: eventTypes } });
 	}
 
 	_findEvents(findStatement, options) {
@@ -152,7 +152,7 @@ module.exports = class MongoEventStorage {
 			.then(writeResult => writeResult.result)
 			.then(result => {
 				if (!result.ok)
-					throw new Error('Write result is not OK: ' + JSON.stringify(result));
+					throw new Error(`Write result is not OK: ${JSON.stringify(result)}`);
 				if (result.n !== events.length)
 					throw new Error(`Number of affected records (${result.n}) does not match number of passed in events (${events.length})`);
 
@@ -167,7 +167,7 @@ module.exports = class MongoEventStorage {
 					throw new ConcurrencyError('event is not unique');
 				}
 				else {
-					info('commit operation has failed: %s', err && err.message || err);
+					info('commit operation has failed: %s', (err && err.message) || err);
 					throw err;
 				}
 			});
