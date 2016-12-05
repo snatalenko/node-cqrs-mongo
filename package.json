@@ -6,25 +6,25 @@
   "scripts": {
     "eslint": "eslint src/",
     "pretest": "npm run eslint",
-    "test": "mocha -R list ./tests",
+    "test": "mocha ./tests",
     "release:patch": "npm version patch && git push --all && git push --tags",
     "release:minor": "npm version minor && git push --all && git push --tags"
   },
-  "repository": "bitbucket:cqrs/node-cqrs-mongo",
+  "repository": "github:snatalenko/node-cqrs-mongo",
   "keywords": [
-    "CQRS",
-    "ES6",
-    "framework",
-    "mongodb"
+    "cqrs",
+    "event",
+    "eventstore",
+    "eventsourcing",
+    "mongo"
   ],
   "author": "@stas_natalenko",
   "license": "MIT",
-  "homepage": "https://bitbucket.org/cqrs/node-cqrs-mongo.git",
+  "homepage": "https://github.com/snatalenko/node-cqrs-mongo#readme",
   "dependencies": {
     "co": "^4.6.0",
     "debug": "^2.2.0",
-    "mongodb": "^2.2.8",
-    "node-cqrs": "bitbucket:cqrs/node-cqrs"
+    "mongodb": "^2.2.8"
   },
   "devDependencies": {
     "chai": "^3.5.0",
