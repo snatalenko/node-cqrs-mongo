@@ -1,10 +1,11 @@
 'use strict';
 
-const MongoEventStorage = require('..');
+require('debug').enable('cqrs:*');
+
+const MongoEventStorage = require('../..');
 const credentials = require('./credentials.json');
-const chai = require('chai');
-const expect = chai.expect;
-chai.should();
+const { expect, should } = require('chai');
+should();
 
 describe('MongoEventStorage', function () {
 
@@ -22,14 +23,7 @@ describe('MongoEventStorage', function () {
 	});
 
 	describe('constructor', () => {
-
-		it('requires connectionString as an option parameter', () => {
-
-			expect(() => new MongoEventStorage({})).to.throw('options.connectionString argument required');
-		});
-
 		it('establishes connection', () => {
-
 			storage.should.have.property('collection');
 			storage.collection.should.be.a('Promise');
 		});
@@ -38,7 +32,6 @@ describe('MongoEventStorage', function () {
 	describe('commitEvents(events)', () => {
 
 		it('exists', () => {
-
 			storage.should.respondTo('commitEvents');
 		});
 

@@ -4,9 +4,10 @@
   "description": "MongoDB storage implementation for node-cqrs backbone",
   "main": "index.js",
   "scripts": {
-    "eslint": "eslint src/",
-    "pretest": "npm run eslint",
-    "test": "mocha ./tests",
+    "lint": "eslint src/",
+    "pretest": "npm run lint",
+    "test": "mocha ./tests/unit",
+    "test:integration": "mocha ./tests/integration",
     "release:patch": "npm version patch && git push --all && git push --tags",
     "release:minor": "npm version minor && git push --all && git push --tags"
   },
@@ -24,7 +25,7 @@
   "dependencies": {
     "co": "^4.6.0",
     "debug": "^2.2.0",
-    "mongodb": "^2.2.8"
+    "mongodb": "^2.2.13"
   },
   "devDependencies": {
     "chai": "^3.5.0",

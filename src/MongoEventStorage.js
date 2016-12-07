@@ -71,12 +71,12 @@ module.exports = class MongoEventStorage {
 		return this[_collection];
 	}
 
-	constructor(options) {
-		if (!options) throw new TypeError('options argument required');
-		if (!options.connectionString) throw new TypeError('options.connectionString argument required');
+	constructor(mongoConfig) {
+		if (!mongoConfig) throw new TypeError('mongoConfig argument required');
+		if (typeof mongoConfig.connectionString !== 'string' || !mongoConfig.connectionString.length) throw new TypeError('mongoConfig.connectionString argument must be a non-empty String');
 
-		const connectionString = options.connectionString;
-		const collectionName = options.eventsCollection || 'events';
+		const connectionString = mongoConfig.connectionString;
+		const collectionName = mongoConfig.eventsCollection || 'events';
 		const connectMethod = co.wrap(connect);
 
 		Object.defineProperty(this, _collection, {
