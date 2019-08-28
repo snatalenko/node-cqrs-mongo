@@ -28,7 +28,8 @@ function wrapBinary(obj, key) {
 	}
 }
 
-function wrapEvent(evt) {
+function wrapEvent(event) {
+	const evt = Object.assign({}, event);
 	if (evt) {
 		wrapObjectId(evt, '_id');
 		wrapObjectId(evt, 'aggregateId');
@@ -39,6 +40,7 @@ function wrapEvent(evt) {
 		}
 		wrapBinary(evt, 'sig');
 		wrapBinary(evt, 'hash');
+		return evt;
 	}
 }
 
@@ -141,11 +143,11 @@ module.exports = class MongoEventStorage {
 			collection.find(findStatement, fields, options).toArray());
 	}
 
-	commitEvents(events) {
-		if (!events) throw new TypeError('events argument required');
-		if (!Array.isArray(events)) throw new TypeError('events argument must be an Array');
+	commitEvents(eventStream) {
+		if (!eventStream) throw new TypeError('eventStream argument required');
+		if (!Array.isArray(eventStream)) throw new TypeError('eventStream argument must be an Array');
 
-		events.forEach(wrapEvent);
+		const events = eventStream.map(wrapEvent);
 
 		return this.collection
 			.then(collection => collection.insert(events, { w: 1 }))
