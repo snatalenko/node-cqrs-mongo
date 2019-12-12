@@ -51,7 +51,7 @@ function* connect({ connectionString, collectionName }) {
 
 	const client = new MongoClient(connectionString);
 	const chunks = connectionString.split('/')
-	const dbName = chunks[chunks.length - 1]
+	const dbName = chunks[chunks.length - 1].replace(/\?.*$/, '')
 
 	yield client.connect()
 	const connection = client.db(dbName);
