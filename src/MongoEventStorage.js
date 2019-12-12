@@ -49,7 +49,12 @@ function* connect({ connectionString, collectionName }) {
 
 	debug(`connecting to ${connectionString.replace(/\/\/([^@/]+@)?/, '//***@')}...`);
 
-	const connection = yield MongoClient.connect(connectionString);
+	const client = new MongoClient(connectionString);
+	const chunks = connectionString.split('/')
+	const dbName = chunks[chunks.length - 1]
+
+	yield client.connect()
+	const connection = client.db(dbName);
 
 	info(`connected to ${connectionString.replace(/\/\/([^@/]+@)?/, '//***@')}`);
 
@@ -173,3 +178,5 @@ module.exports = class MongoEventStorage {
 			});
 	}
 };
+
+module.exports.connect = connect
