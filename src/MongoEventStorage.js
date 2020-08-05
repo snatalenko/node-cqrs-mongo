@@ -142,8 +142,15 @@ module.exports = class MongoEventStorage {
 
 		const fields = { _id: false };
 
-		return this.collection.then(collection =>
-			collection.find(findStatement, fields, options).toArray());
+		return this.collection.then(collection => {
+			const statement = collection.find(findStatement, fields)
+
+			if (options && options.sort) {
+				statement.sort({ [options.sort]: 1 })
+			}
+
+			return statement.toArray();
+		});
 	}
 
 	commitEvents(events) {
