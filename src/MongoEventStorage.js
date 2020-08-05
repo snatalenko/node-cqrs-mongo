@@ -7,6 +7,7 @@ const ConcurrencyError = require('./ConcurrencyError');
 const reconnect = require('./reconnect');
 const debug = require('debug')('cqrs:debug:mongo');
 const info = require('debug')('cqrs:info:mongo');
+const parseMongoUrl = require('parse-mongo-url')
 
 const co = require('co');
 
@@ -50,11 +51,10 @@ function* connect({ connectionString, collectionName }) {
 	debug(`connecting to ${connectionString.replace(/\/\/([^@/]+@)?/, '//***@')}...`);
 
 	const client = new MongoClient(connectionString);
-	const chunks = connectionString.split('/')
-	const dbName = chunks[chunks.length - 1].replace(/\?.*$/, '')
+	const parsed = parseMongoUrl(connectionString)
 
 	yield client.connect()
-	const connection = client.db(dbName);
+	const connection = client.db(parsed.dbName);
 
 	info(`connected to ${connectionString.replace(/\/\/([^@/]+@)?/, '//***@')}`);
 

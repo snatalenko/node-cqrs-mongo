@@ -3,7 +3,9 @@
 require('debug').enable('cqrs:*');
 
 const MongoEventStorage = require('../..');
-const credentials = require('./credentials.json');
+const credentials = {
+	connectionString: 'mongodb://localhost/wf_engine'
+}
 const { expect, should } = require('chai');
 should();
 
