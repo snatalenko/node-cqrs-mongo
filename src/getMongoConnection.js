@@ -6,7 +6,7 @@ const connections = {}
 
 module.exports = url => {
 	if (!connections[url]) {
-		return new Promise((resolve, reject) => {
+		connections[url] = new Promise((resolve, reject) => {
 			const parsed = parseMongoUrl(url)
 			const client = new MongoClient(url)
 
@@ -17,15 +17,12 @@ module.exports = url => {
 
 				debug('Connected to ' + url.replace(/:([^:@]+)@/, ':***@'))
 				const db = client.db(parsed.dbName)
-
-				connections[url] = { client, db }
-
 				resolve(db)
 			})
 		})
-	} else {
-		return Promise.resolve(connections[url].db)
 	}
+
+	return connections[url]
 }
 
 module.exports.close = url => connections[url].client.close()
