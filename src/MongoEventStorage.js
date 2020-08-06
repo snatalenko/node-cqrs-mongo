@@ -8,6 +8,7 @@ const reconnect = require('./reconnect');
 const debug = require('debug')('cqrs:debug:mongo');
 const info = require('debug')('cqrs:info:mongo');
 const parseMongoUrl = require('parse-mongo-url')
+const getMongoConnection = require('./getMongoConnection')
 
 const co = require('co');
 
@@ -50,11 +51,13 @@ function* connect({ connectionString, collectionName }) {
 
 	debug(`connecting to ${connectionString.replace(/\/\/([^@/]+@)?/, '//***@')}...`);
 
-	const client = new MongoClient(connectionString);
-	const parsed = parseMongoUrl(connectionString)
+	// const client = new MongoClient(connectionString);
+	// const parsed = parseMongoUrl(connectionString)
+	//
+	// yield client.connect()
+	// const connection = client.db(parsed.dbName);
 
-	yield client.connect()
-	const connection = client.db(parsed.dbName);
+	const connection = yield getMongoConnection(connectionString)
 
 	info(`connected to ${connectionString.replace(/\/\/([^@/]+@)?/, '//***@')}`);
 
@@ -179,6 +182,7 @@ module.exports = class MongoEventStorage {
 					throw new ConcurrencyError('event is not unique');
 				}
 				else {
+					console.error(err)
 					info('commit operation has failed: %s', (err && err.message) || err);
 					throw err;
 				}
