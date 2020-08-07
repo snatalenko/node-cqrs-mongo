@@ -4,7 +4,7 @@ const debug = require('debug')('mongoConnection')
 
 const connections = {}
 
-module.exports = async url => {
+module.exports = url => {
 	if (!connections[url]) {
 		connections[url] = new Promise((resolve, reject) => {
 			const parsed = parseMongoUrl(url)
@@ -16,14 +16,13 @@ module.exports = async url => {
 				}
 
 				debug('Connected to ' + url.replace(/:([^:@]+)@/, ':***@'))
-				console.log('Connected to ' + url.replace(/:([^:@]+)@/, ':***@'))
 				const db = client.db(parsed.dbName)
-				resolve({ db, client })
+				resolve(db)
 			})
 		})
 	}
 
-	return (await connections[url]).db
+	return connections[url]
 }
 
 module.exports.close = url => connections[url].client.close()
