@@ -11,7 +11,7 @@
     "release:patch": "npm version patch && git push --all && git push --tags",
     "release:minor": "npm version minor && git push --all && git push --tags"
   },
-  "repository": "github:snatalenko/node-cqrs-mongo",
+  "repository": "https://github.com/Apination/node-cqrs-mongo",
   "keywords": [
     "cqrs",
     "event",
@@ -21,11 +21,12 @@
   ],
   "author": "@stas_natalenko",
   "license": "MIT",
-  "homepage": "https://github.com/snatalenko/node-cqrs-mongo#readme",
+  "homepage": "https://github.com/Apination/node-cqrs-mongo#readme",
   "dependencies": {
     "co": "^4.6.0",
     "debug": "^2.2.0",
-    "mongodb": "^2.2.13"
+    "mongodb": "^3.4.0",
+    "parse-mongo-url": "^1.1.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",
