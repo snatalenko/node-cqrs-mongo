@@ -1,6 +1,6 @@
 {
   "name": "node-cqrs-mongo",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "MongoDB storage implementation for node-cqrs backbone",
   "main": "index.js",
   "scripts": {
@@ -25,7 +25,7 @@
   "dependencies": {
     "co": "^4.6.0",
     "debug": "^2.2.0",
-    "mongodb": "^3.4.0",
+    "mongodb": "^3.7.4",
     "parse-mongo-url": "^1.1.1"
   },
   "devDependencies": {
