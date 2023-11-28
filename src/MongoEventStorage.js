@@ -163,7 +163,7 @@ module.exports = class MongoEventStorage {
 		events.forEach(wrapEvent);
 
 		return this.collection
-			.then(collection => collection.insert(events, { w: 1 }))
+			.then(collection => collection.insertMany(events, { w: 1 }))
 			.then(writeResult => writeResult.result)
 			.then(result => {
 				if (!result.ok)
