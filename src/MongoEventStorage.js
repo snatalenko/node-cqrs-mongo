@@ -15,16 +15,28 @@ const co = require('co');
 const _collection = Symbol('collection');
 
 function wrapObjectId(obj, key) {
-	if (!obj) throw new TypeError('obj argument required');
-	if (!key) throw new TypeError('key argument required');
+	if (!obj) {
+		throw new TypeError('obj argument required');
+	}
+
+	if (!key) {
+		throw new TypeError('key argument required');
+	}
+
 	if (typeof obj[key] === 'string' && obj[key].length === 24) {
 		obj[key] = new ObjectID(obj[key]);
 	}
 }
 
 function wrapBinary(obj, key) {
-	if (!obj) throw new TypeError('obj argument required');
-	if (!key) throw new TypeError('key argument required');
+	if (!obj) {
+		throw new TypeError('obj argument required');
+	}
+
+	if (!key) {
+		throw new TypeError('key argument required');
+	}
+
 	if (typeof obj[key] === 'string') {
 		obj[key] = new Binary(new Buffer(obj[key], 'hex'));
 	}
@@ -46,22 +58,22 @@ function wrapEvent(evt) {
 
 
 function* connect({ connectionString, collectionName }) {
-	if (typeof connectionString !== 'string' || !connectionString.length) throw new TypeError('connectionString argument must be a non-empty String');
-	if (typeof collectionName !== 'string' || !collectionName.length) throw new TypeError('collectionName argument must be a non-empty String');
+	if (typeof connectionString !== 'string' || !connectionString.length) {
+		throw new TypeError('connectionString argument must be a non-empty String');
+	}
+
+	if (typeof collectionName !== 'string' || !collectionName.length) {
+		throw new TypeError('collectionName argument must be a non-empty String');
+	}
 
 	debug(`connecting to ${connectionString.replace(/\/\/([^@/]+@)?/, '//***@')}...`);
-
-	// const client = new MongoClient(connectionString);
-	// const parsed = parseMongoUrl(connectionString)
-	//
-	// yield client.connect()
-	// const connection = client.db(parsed.dbName);
 
 	const connection = yield getMongoConnection(connectionString)
 
 	info(`connected to ${connectionString.replace(/\/\/([^@/]+@)?/, '//***@')}`);
 
 	const collection = connection.collection(collectionName);
+
 	const indexNames = yield [
 		collection.ensureIndex({ aggregateId: 1, aggregateVersion: 1 }, { unique: true, sparse: true }),
 		collection.ensureIndex({ sagaId: 1, sagaVersion: 1 }, { unique: false, sparse: true })
@@ -80,8 +92,13 @@ module.exports = class MongoEventStorage {
 	}
 
 	constructor(mongoConfig) {
-		if (!mongoConfig) throw new TypeError('mongoConfig argument required');
-		if (typeof mongoConfig.connectionString !== 'string' || !mongoConfig.connectionString.length) throw new TypeError('mongoConfig.connectionString argument must be a non-empty String');
+		if (!mongoConfig) {
+			throw new TypeError('mongoConfig argument required');
+		}
+
+		if (typeof mongoConfig.connectionString !== 'string' || !mongoConfig.connectionString.length) {
+			throw new TypeError('mongoConfig.connectionString argument must be a non-empty String');
+		}
 
 		const connectionString = mongoConfig.connectionString;
 		const collectionName = mongoConfig.eventsCollection || 'events';
@@ -97,8 +114,13 @@ module.exports = class MongoEventStorage {
 	}
 
 	getAggregateEvents(aggregateId, options) {
-		if (!aggregateId) throw new TypeError('aggregateId argument required');
-		if (typeof aggregateId === 'string') aggregateId = new ObjectID(aggregateId);
+		if (!aggregateId) {
+			throw new TypeError('aggregateId argument required');
+		}
+
+		if (typeof aggregateId === 'string') {
+			aggregateId = new ObjectID(aggregateId);
+		}
 
 		const q = { aggregateId };
 
@@ -114,8 +136,13 @@ module.exports = class MongoEventStorage {
 	}
 
 	getSagaEvents(sagaId, options) {
-		if (!sagaId) throw new TypeError('sagaId argument required');
-		if (typeof sagaId === 'string') sagaId = new ObjectID(sagaId);
+		if (!sagaId) {
+			throw new TypeError('sagaId argument required');
+		}
+
+		if (typeof sagaId === 'string') {
+			sagaId = new ObjectID(sagaId);
+		}
 
 		const q = { sagaId };
 
@@ -135,13 +162,17 @@ module.exports = class MongoEventStorage {
 	}
 
 	getEvents(eventTypes) {
-		if (!Array.isArray(eventTypes)) throw new TypeError('eventTypes argument must be an Array');
+		if (!Array.isArray(eventTypes)) {
+			throw new TypeError('eventTypes argument must be an Array');
+		}
 
 		return this._findEvents({ type: { $in: eventTypes } });
 	}
 
 	_findEvents(findStatement, options) {
-		if (!findStatement) throw new TypeError('findStatement argument required');
+		if (!findStatement) {
+			throw new TypeError('findStatement argument required');
+		}
 
 		const fields = { _id: false };
 
@@ -157,8 +188,13 @@ module.exports = class MongoEventStorage {
 	}
 
 	commitEvents(events) {
-		if (!events) throw new TypeError('events argument required');
-		if (!Array.isArray(events)) throw new TypeError('events argument must be an Array');
+		if (!events) {
+			throw new TypeError('events argument required');
+		}
+
+		if (!Array.isArray(events)) {
+			throw new TypeError('events argument must be an Array');
+		}
 
 		events.forEach(wrapEvent);
 
@@ -166,10 +202,13 @@ module.exports = class MongoEventStorage {
 			.then(collection => collection.insertMany(events, { w: 1 }))
 			.then(writeResult => writeResult.result)
 			.then(result => {
-				if (!result.ok)
+				if (!result.ok) {
 					throw new Error(`Write result is not OK: ${JSON.stringify(result)}`);
-				if (result.n !== events.length)
+				}
+
+				if (result.n !== events.length) {
 					throw new Error(`Number of affected records (${result.n}) does not match number of passed in events (${events.length})`);
+				}
 
 				events.forEach(e => {
 					e.id = e._id;
